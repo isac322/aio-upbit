@@ -1,0 +1,57 @@
+[tool.poetry]
+name = "aioupbit"
+version = "0.0.1"
+description = "Upbit Client supports asyncio"
+authors = ["Byeonghoon Yoo <bh322yoo@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+keywords = ["upbit", "client", "asyncio", "cryptocurrency"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+aiohttp = { version = "^3.8.1", extras = ["speedups"] }
+orjson = "^3.6.5"
+
+[tool.poetry.dev-dependencies]
+mypy = "^0.930"
+black = "^21.12b0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 120
+target-version = ['py37', 'py38', 'py39', 'py310']
+skip-string-normalization = true
+
+
+[tool.mypy]
+python_version = '3.7'
+
+allow_any_expr = true
+allow_any_decorated = true
+allow_any_explicit = true
+disallow_any_generics = true
+allow_subclassing_any = true
+
+allow_redefinition = true
+disallow_incomplete_defs = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_untyped_defs = true
+no_implicit_optional = true
+no_implicit_reexport = true
+no_warn_no_return = true
+strict_equality = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unreachable = true
+warn_unused_ignores = true
+
+# Output configuration
+show_error_context = true
+show_column_numbers = true
+show_error_codes = true
+pretty = true
+
