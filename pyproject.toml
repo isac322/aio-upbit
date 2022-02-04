@@ -1,11 +1,14 @@
 [tool.poetry]
-name = "aioupbit"
+name = "aio-upbit"
 version = "0.0.1"
 description = "Upbit Client supports asyncio"
 authors = ["Byeonghoon Yoo <bh322yoo@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 keywords = ["upbit", "client", "asyncio", "cryptocurrency"]
+packages = [
+    {include = "aioupbit"}
+]
 
 [tool.poetry.dependencies]
 python = "^3.7"
