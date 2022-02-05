@@ -14,10 +14,13 @@ packages = [
 python = "^3.7"
 aiohttp = { version = "^3.8.1", extras = ["speedups"] }
 orjson = "^3.6.5"
+"backports.zoneinfo" = {version = "^0.2.1", python = ">=3.7,<3.9"}
+typing-extensions = "^3.8"
+PyJWT = "^2.3.0"
 
 [tool.poetry.dev-dependencies]
-mypy = "^0.930"
-black = "^21.12b0"
+mypy = "^0.931"
+black = "^22.1.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
