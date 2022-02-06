@@ -33,11 +33,10 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.7"
 aiohttp = { version = "^3.8.1", extras = ["speedups"] }
-orjson = "^3.6.5"
 "backports.zoneinfo" = {version = "^0.2.1", python = "<3.9"}
 typing-extensions = "^3.8"
 PyJWT = "^2.3.0"
-ciso8601 = "^2.2.0"
+python-rapidjson = "^1.5"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.931"
@@ -82,3 +81,7 @@ show_column_numbers = true
 show_error_codes = true
 pretty = true
 
+
+[[tool.mypy.overrides]]
+module = ['rapidjson.*']
+ignore_missing_imports = true

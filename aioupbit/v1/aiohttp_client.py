@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import codecs
 import datetime
 import uuid
-from typing import ClassVar, Iterable, Optional, Sequence, Union, overload
+from typing import Any, ClassVar, Iterable, Mapping, Optional, Sequence, Union, cast, overload
 
 import aiohttp.connector
-import orjson
+import rapidjson
+from typing_extensions import Final
 
+from aioupbit import utils
 from aioupbit.v1 import constants, values
 from aioupbit.v1.client import Client
 
@@ -15,6 +18,8 @@ __all__ = ('AioHTTPRestClient',)
 
 class AioHTTPRestClient(Client):
     __slots__ = ('_session',)
+
+    _UTF8: Final[codecs.CodecInfo] = codecs.lookup('UTF-8')
 
     _connector: ClassVar[Optional[aiohttp.BaseConnector]] = None
 
@@ -45,10 +50,30 @@ class AioHTTPRestClient(Client):
         )
 
     @classmethod
+    async def _deserialize_json_response(cls, res: aiohttp.ClientResponse) -> Any:
+        content: Union[str, bytes] = await res.read()
+        encoding = res.get_encoding()
+        if encoding != 'utf-8' and utils.get_codec(encoding) != cls._UTF8:
+            content = content.decode(encoding)  # type: ignore[union-attr]
+        print(content)
+        print(
+            rapidjson.loads(
+                content,
+                number_mode=rapidjson.NM_NAN | rapidjson.NM_DECIMAL,
+                datetime_mode=rapidjson.DM_ISO8601 | rapidjson.DM_NAIVE_IS_UTC,
+            )
+        )
+        return rapidjson.loads(
+            content,
+            number_mode=rapidjson.NM_NAN | rapidjson.NM_DECIMAL,
+            datetime_mode=rapidjson.DM_ISO8601 | rapidjson.DM_NAIVE_IS_UTC,
+        )
+
+    @classmethod
     async def markets(cls) -> Iterable[values.Ticker]:
         async with cls._get_class_level_session() as session:
             async with session.get('/v1/market/all?isDetails=true') as res:
-                return map(values.Ticker.from_json, await res.json(loads=orjson.loads))
+                return map(values.Ticker.from_json, await cls._deserialize_json_response(res))
 
     @classmethod
     async def candles(
@@ -66,7 +91,10 @@ class AioHTTPRestClient(Client):
             if to is not None:
                 params['to'] = to.astimezone(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
             async with session.get(f'/v1/candles/minutes/{unit.value}', params=params) as res:
-                return map(values.MinCandle.from_json, await res.json(loads=orjson.loads))
+                return map(
+                    values.MinCandle.from_json,
+                    cast(Sequence[Mapping[str, Any]], await cls._deserialize_json_response(res)),
+                )
 
     @classmethod
     async def candles_day(
@@ -86,7 +114,10 @@ class AioHTTPRestClient(Client):
             if converting_price_unit is not None:
                 params['convertingPriceUnit'] = converting_price_unit
             async with session.get('/v1/candles/days', params=params) as res:
-                return map(values.DayCandle.from_json, await res.json(loads=orjson.loads))
+                return map(
+                    values.DayCandle.from_json,
+                    cast(Sequence[Mapping[str, Any]], await cls._deserialize_json_response(res)),
+                )
 
     @classmethod
     async def candles_week(
@@ -103,7 +134,10 @@ class AioHTTPRestClient(Client):
             if to is not None:
                 params['to'] = to.astimezone(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
             async with session.get('/v1/candles/weeks', params=params) as res:
-                return map(values.WeekCandle.from_json, await res.json(loads=orjson.loads))
+                return map(
+                    values.WeekCandle.from_json,
+                    cast(Sequence[Mapping[str, Any]], await cls._deserialize_json_response(res)),
+                )
 
     @classmethod
     async def candles_month(
@@ -120,7 +154,10 @@ class AioHTTPRestClient(Client):
             if to is not None:
                 params['to'] = to.astimezone(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
             async with session.get('/v1/candles/months', params=params) as res:
-                return map(values.MonthCandle.from_json, await res.json(loads=orjson.loads))
+                return map(
+                    values.MonthCandle.from_json,
+                    cast(Sequence[Mapping[str, Any]], await cls._deserialize_json_response(res)),
+                )
 
     @classmethod
     async def latest_trades(
@@ -143,21 +180,30 @@ class AioHTTPRestClient(Client):
             if to is not None:
                 params['to'] = to.isoformat()
             async with session.get('/v1/trades/ticks', params=params) as res:
-                return map(values.Trade.from_json, await res.json(loads=orjson.loads))
+                return map(
+                    values.Trade.from_json,
+                    cast(Sequence[Mapping[str, Any]], await cls._deserialize_json_response(res)),
+                )
 
     @classmethod
     async def latest_tick(cls, markets: Union[Iterable[values.Ticker], Iterable[str]]) -> Iterable[values.Tick]:
         async with cls._get_class_level_session() as session:
             params = dict(markets=','.join(map(cls._get_ticker_code, markets)))
             async with session.get('/v1/ticker', params=params) as res:
-                return map(values.Tick.from_json, await res.json(loads=orjson.loads))
+                return map(
+                    values.Tick.from_json,
+                    cast(Sequence[Mapping[str, Any]], await cls._deserialize_json_response(res)),
+                )
 
     @classmethod
     async def orderbook(cls, markets: Union[Iterable[values.Ticker], Iterable[str]]) -> Iterable[values.Orderbook]:
         async with cls._get_class_level_session() as session:
             params = dict(markets=','.join(map(cls._get_ticker_code, markets)))
             async with session.get('/v1/orderbook', params=params) as res:
-                return map(values.Orderbook.from_json, await res.json(loads=orjson.loads))
+                return map(
+                    values.Orderbook.from_json,
+                    cast(Sequence[Mapping[str, Any]], await cls._deserialize_json_response(res)),
+                )
 
     async def accounts(self) -> Sequence[values.Account]:
         pass

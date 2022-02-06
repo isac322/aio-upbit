@@ -5,13 +5,11 @@ from abc import ABCMeta
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import IntEnum
-from typing import AbstractSet, Any, Mapping, Optional, Sequence
+from typing import AbstractSet, Any, Mapping, Optional, Sequence, Type, TypeVar
 from uuid import UUID
 
-import ciso8601
-
 try:
-    from zoneinfo import ZoneInfo
+    from zoneinfo import ZoneInfo  # type: ignore[import]
 except ImportError:
     from backports.zoneinfo import ZoneInfo  # type: ignore[import]
 
@@ -100,14 +98,14 @@ class MinCandle(BaseCandle):
     def from_json(cls, json: Mapping[str, Any]) -> MinCandle:
         return cls(
             ticker=json['market'],
-            date_time=ciso8601.parse_datetime(json['candle_date_time_utc']).replace(tzinfo=datetime.timezone.utc),
-            opening_price=Decimal(json['opening_price']),
-            high_price=Decimal(json['high_price']),
-            low_price=Decimal(json['low_price']),
-            trade_price=Decimal(json['trade_price']),
+            date_time=json['candle_date_time_utc'],
+            opening_price=json['opening_price'],
+            high_price=json['high_price'],
+            low_price=json['low_price'],
+            trade_price=json['trade_price'],
             latest_tick_timestamp=datetime.datetime.fromtimestamp(json['timestamp'] / 1000, datetime.timezone.utc),
-            acc_trade_price=Decimal(json['candle_acc_trade_price']),
-            acc_trade_volume=Decimal(json['candle_acc_trade_volume']),
+            acc_trade_price=json['candle_acc_trade_price'],
+            acc_trade_volume=json['candle_acc_trade_volume'],
             unit=cls.Unit(json['unit']),
         )
 
@@ -125,21 +123,22 @@ class DayCandle(BaseCandle):
     def from_json(cls, json: Mapping[str, Any]) -> DayCandle:
         return cls(
             ticker=json['market'],
-            date_time=ciso8601.parse_datetime(json['candle_date_time_utc']).replace(tzinfo=datetime.timezone.utc),
-            opening_price=Decimal(json['opening_price']),
-            high_price=Decimal(json['high_price']),
-            low_price=Decimal(json['low_price']),
-            trade_price=Decimal(json['trade_price']),
+            date_time=json['candle_date_time_utc'],
+            opening_price=json['opening_price'],
+            high_price=json['high_price'],
+            low_price=json['low_price'],
+            trade_price=json['trade_price'],
             latest_tick_timestamp=datetime.datetime.fromtimestamp(json['timestamp'] / 1000, datetime.timezone.utc),
-            acc_trade_price=Decimal(json['candle_acc_trade_price']),
-            acc_trade_volume=Decimal(json['candle_acc_trade_volume']),
-            prev_closing_price=Decimal(json['prev_closing_price']),
-            change_price=Decimal(json['change_price']),
-            change_rate=Decimal(json['change_rate']),
-            converted_trade_price=(
-                Decimal(json['converted_trade_price']) if json.get('converted_trade_price') is not None else None
-            ),
+            acc_trade_price=json['candle_acc_trade_price'],
+            acc_trade_volume=json['candle_acc_trade_volume'],
+            prev_closing_price=json['prev_closing_price'],
+            change_price=json['change_price'],
+            change_rate=json['change_rate'],
+            converted_trade_price=json.get('converted_trade_price'),
         )
+
+
+_SelfWeekCandle = TypeVar('_SelfWeekCandle', bound='WeekCandle')
 
 
 @dataclass(frozen=True)
@@ -149,41 +148,24 @@ class WeekCandle(BaseCandle):
     first_day_of_period: datetime.date
 
     @classmethod
-    def from_json(cls, json: Mapping[str, Any]) -> WeekCandle:
+    def from_json(cls: Type[_SelfWeekCandle], json: Mapping[str, Any]) -> _SelfWeekCandle:
         return cls(
             ticker=json['market'],
-            date_time=ciso8601.parse_datetime(json['candle_date_time_utc']).replace(tzinfo=datetime.timezone.utc),
-            opening_price=Decimal(json['opening_price']),
-            high_price=Decimal(json['high_price']),
-            low_price=Decimal(json['low_price']),
-            trade_price=Decimal(json['trade_price']),
+            date_time=json['candle_date_time_utc'],
+            opening_price=json['opening_price'],
+            high_price=json['high_price'],
+            low_price=json['low_price'],
+            trade_price=json['trade_price'],
             latest_tick_timestamp=datetime.datetime.fromtimestamp(json['timestamp'] / 1000, datetime.timezone.utc),
-            acc_trade_price=Decimal(json['candle_acc_trade_price']),
-            acc_trade_volume=Decimal(json['candle_acc_trade_volume']),
-            first_day_of_period=datetime.date.fromisoformat(json['first_day_of_period']),
+            acc_trade_price=json['candle_acc_trade_price'],
+            acc_trade_volume=json['candle_acc_trade_volume'],
+            first_day_of_period=json['first_day_of_period'],
         )
 
 
 @dataclass(frozen=True)
-class MonthCandle(BaseCandle):
-    __slots__ = ('first_day_of_period',)
-
-    first_day_of_period: datetime.date
-
-    @classmethod
-    def from_json(cls, json: Mapping[str, Any]) -> MonthCandle:
-        return cls(
-            ticker=json['market'],
-            date_time=ciso8601.parse_datetime(json['candle_date_time_utc']).replace(tzinfo=datetime.timezone.utc),
-            opening_price=Decimal(json['opening_price']),
-            high_price=Decimal(json['high_price']),
-            low_price=Decimal(json['low_price']),
-            trade_price=Decimal(json['trade_price']),
-            latest_tick_timestamp=datetime.datetime.fromtimestamp(json['timestamp'] / 1000, datetime.timezone.utc),
-            acc_trade_price=Decimal(json['candle_acc_trade_price']),
-            acc_trade_volume=Decimal(json['candle_acc_trade_volume']),
-            first_day_of_period=datetime.date.fromisoformat(json['first_day_of_period']),
-        )
+class MonthCandle(WeekCandle):
+    pass
 
 
 @dataclass(frozen=True)
@@ -213,10 +195,10 @@ class Trade:
         return cls(
             ticker=json['market'],
             timestamp=datetime.datetime.fromtimestamp(json['timestamp'] / 1000, datetime.timezone.utc),
-            trade_price=Decimal(json['trade_price']),
-            trade_volume=Decimal(json['trade_volume']),
-            prev_closing_price=Decimal(json['prev_closing_price']),
-            change_price=Decimal(json['change_price']),
+            trade_price=json['trade_price'],
+            trade_volume=json['trade_volume'],
+            prev_closing_price=json['prev_closing_price'],
+            change_price=json['change_price'],
             side=constants.Side(json['ask_bid']),
             sequential_id=json['sequential_id'],
         )
@@ -277,25 +259,25 @@ class Tick:
         return cls(
             ticker=json['market'],
             trade_date_time=datetime.datetime.fromtimestamp(json['trade_timestamp'] / 1000, ZoneInfo('Asia/Seoul')),
-            opening_price=Decimal(json['opening_price']),
-            high_price=Decimal(json['high_price']),
-            low_price=Decimal(json['low_price']),
-            trade_price=Decimal(json['trade_price']),
-            prev_closing_price=Decimal(json['prev_closing_price']),
+            opening_price=json['opening_price'],
+            high_price=json['high_price'],
+            low_price=json['low_price'],
+            trade_price=json['trade_price'],
+            prev_closing_price=json['prev_closing_price'],
             change=constants.Change(json['change']),
-            change_price=Decimal(json['change_price']),
-            change_rate=Decimal(json['change_rate']),
-            signed_change_price=Decimal(json['signed_change_price']),
-            signed_change_rate=Decimal(json['signed_change_rate']),
-            trade_volume=Decimal(json['trade_volume']),
-            acc_trade_price=Decimal(json['acc_trade_price']),
-            acc_trade_price_24h=Decimal(json['acc_trade_price_24h']),
-            acc_trade_volume=Decimal(json['acc_trade_volume']),
-            acc_trade_volume_24h=Decimal(json['acc_trade_volume_24h']),
-            highest_52_week_price=Decimal(json['highest_52_week_price']),
-            highest_52_week_date=datetime.date.fromisoformat(json['highest_52_week_date']),
-            lowest_52_week_price=Decimal(json['lowest_52_week_price']),
-            lowest_52_week_date=datetime.date.fromisoformat(json['lowest_52_week_date']),
+            change_price=json['change_price'],
+            change_rate=json['change_rate'],
+            signed_change_price=json['signed_change_price'],
+            signed_change_rate=json['signed_change_rate'],
+            trade_volume=json['trade_volume'],
+            acc_trade_price=json['acc_trade_price'],
+            acc_trade_price_24h=json['acc_trade_price_24h'],
+            acc_trade_volume=json['acc_trade_volume'],
+            acc_trade_volume_24h=json['acc_trade_volume_24h'],
+            highest_52_week_price=json['highest_52_week_price'],
+            highest_52_week_date=json['highest_52_week_date'],
+            lowest_52_week_price=json['lowest_52_week_price'],
+            lowest_52_week_date=json['lowest_52_week_date'],
             timestamp=datetime.datetime.fromtimestamp(json['timestamp'] / 1000, datetime.timezone.utc),
         )
 
@@ -316,10 +298,10 @@ class Orderbook:
         @classmethod
         def from_json(cls, json: Mapping[str, Any]) -> Orderbook.Unit:
             return cls(
-                ask_price=Decimal(json['ask_price']),
-                bid_price=Decimal(json['bid_price']),
-                ask_size=Decimal(json['ask_size']),
-                bid_size=Decimal(json['bid_size']),
+                ask_price=json['ask_price'],
+                bid_price=json['bid_price'],
+                ask_size=json['ask_size'],
+                bid_size=json['bid_size'],
             )
 
     ticker: str
@@ -333,8 +315,8 @@ class Orderbook:
         return cls(
             ticker=json['market'],
             timestamp=datetime.datetime.fromtimestamp(json['timestamp'] / 1000, ZoneInfo('Asia/Seoul')),
-            total_ask_size=Decimal(json['total_ask_size']),
-            total_bid_size=Decimal(json['total_bid_size']),
+            total_ask_size=json['total_ask_size'],
+            total_bid_size=json['total_bid_size'],
             orderbook_units=tuple(map(cls.Unit.from_json, json['orderbook_units'])),
         )
 
