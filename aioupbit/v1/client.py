@@ -12,9 +12,12 @@ from typing_extensions import Final
 
 from aioupbit.v1 import constants, values
 
+__all__ = ('Client',)
+
 
 class Client(metaclass=ABCMeta):
     __slots__ = ('_access_key', '_secret_key')
+    BASE_URL: Final[str] = 'https://api.upbit.com'
 
     _access_key: Final[str]
     _secret_key: Final[str]
@@ -26,8 +29,14 @@ class Client(metaclass=ABCMeta):
         self._secret_key = secret_key
 
     @classmethod
+    def _get_ticker_code(cls, ticker: Union[values.Ticker, str]) -> str:
+        if isinstance(ticker, values.Ticker):
+            return ticker.ticker
+        return ticker
+
+    @classmethod
     @abstractmethod
-    async def markets(cls) -> Sequence[values.Ticker]:
+    async def markets(cls) -> Iterable[values.Ticker]:
         """https://docs.upbit.com/reference/%EB%A7%88%EC%BC%93-%EC%BD%94%EB%93%9C-%EC%A1%B0%ED%9A%8C"""
         raise NotImplementedError
 
@@ -39,7 +48,7 @@ class Client(metaclass=ABCMeta):
         unit: values.MinCandle.Unit = values.MinCandle.Unit.MIN1,
         count: int = 1,
         to: Optional[datetime.datetime] = None,
-    ) -> Sequence[values.MinCandle]:
+    ) -> Iterable[values.MinCandle]:
         """https://docs.upbit.com/reference/%EB%B6%84minute-%EC%BA%94%EB%93%A4-1"""
         raise NotImplementedError
 
@@ -51,7 +60,7 @@ class Client(metaclass=ABCMeta):
         count: int = 1,
         to: Optional[datetime.datetime] = None,
         converting_price_unit: Optional[constants.CurrencyCode] = None,
-    ) -> Sequence[values.DayCandle]:
+    ) -> Iterable[values.DayCandle]:
         """https://docs.upbit.com/reference/%EC%9D%BCday-%EC%BA%94%EB%93%A4-1"""
         raise NotImplementedError
 
@@ -62,7 +71,7 @@ class Client(metaclass=ABCMeta):
         ticker: Union[values.Ticker, str],
         count: int = 1,
         to: Optional[datetime.datetime] = None,
-    ) -> Sequence[values.WeekCandle]:
+    ) -> Iterable[values.WeekCandle]:
         """https://docs.upbit.com/reference/%EC%A3%BCweek-%EC%BA%94%EB%93%A4-1"""
         raise NotImplementedError
 
@@ -73,7 +82,7 @@ class Client(metaclass=ABCMeta):
         ticker: Union[values.Ticker, str],
         count: int = 1,
         to: Optional[datetime.datetime] = None,
-    ) -> Sequence[values.MonthCandle]:
+    ) -> Iterable[values.MonthCandle]:
         """https://docs.upbit.com/reference/%EC%9B%94month-%EC%BA%94%EB%93%A4-1"""
         raise NotImplementedError
 
@@ -86,19 +95,19 @@ class Client(metaclass=ABCMeta):
         count: int = 1,
         cursor: Optional[int] = None,
         days_ago: constants.DaysAgo = 0,
-    ) -> Sequence[values.Trade]:
+    ) -> Iterable[values.Trade]:
         """https://docs.upbit.com/reference/%EC%B5%9C%EA%B7%BC-%EC%B2%B4%EA%B2%B0-%EB%82%B4%EC%97%AD"""
         raise NotImplementedError
 
     @classmethod
     @abstractmethod
-    async def latest_tick(cls, markets: Union[Iterable[values.Ticker], Iterable[str]]) -> Sequence[values.Tick]:
+    async def latest_tick(cls, markets: Union[Iterable[values.Ticker], Iterable[str]]) -> Iterable[values.Tick]:
         """https://docs.upbit.com/reference/ticker%ED%98%84%EC%9E%AC%EA%B0%80-%EB%82%B4%EC%97%AD"""
         raise NotImplementedError
 
     @classmethod
     @abstractmethod
-    async def orderbook(cls, markets: Union[Iterable[values.Ticker], Iterable[str]]) -> Sequence[values.Orderbook]:
+    async def orderbook(cls, markets: Union[Iterable[values.Ticker], Iterable[str]]) -> Iterable[values.Orderbook]:
         """https://docs.upbit.com/reference/%ED%98%B8%EA%B0%80-%EC%A0%95%EB%B3%B4-%EC%A1%B0%ED%9A%8C"""
         raise NotImplementedError
 
@@ -138,7 +147,6 @@ class Client(metaclass=ABCMeta):
         raise NotImplementedError
 
     @overload
-    @abstractmethod
     async def orders(
         self,
         *,
@@ -153,7 +161,6 @@ class Client(metaclass=ABCMeta):
         pass
 
     @overload
-    @abstractmethod
     async def orders(
         self,
         *,
