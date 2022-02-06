@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aio-upbit"
-version = "0.0.1"
+version = "0.1.0"
 description = "Upbit Client supports asyncio"
 authors = ["Byeonghoon Yoo <bh322yoo@gmail.com>"]
 license = "MIT"
