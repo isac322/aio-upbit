@@ -34,7 +34,7 @@ classifiers = [
 python = "^3.7"
 aiohttp = { version = "^3.8.1", extras = ["speedups"] }
 "backports.zoneinfo" = {version = "^0.2.1", python = "<3.9"}
-typing-extensions = "^3.8"
+typing-extensions = "^4.0"
 PyJWT = "^2.3.0"
 python-rapidjson = "^1.5"
 
