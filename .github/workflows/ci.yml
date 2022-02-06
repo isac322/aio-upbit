@@ -1,0 +1,63 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version: [ "3.7", "3.8", "3.9", "3.10" ]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python_version }}
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/pypoetry/artifacts
+            ~/.cache/pypoetry/cache/repositories
+            ~/.cache/pip
+          key: ${{ matrix.python_version }}-pip-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ matrix.python_version }}-pip-
+      - uses: abatilo/actions-poetry@v2.1.4
+      - name: Install dependencies
+        run: |
+          poetry install --no-root --remove-untracked
+      - name: Run test
+        run: |
+          poetry run pytest --cov aioupbit --cov-config pyproject.toml --cov-report 'xml:coverage.xml' ./tests
+      - uses: codecov/codecov-action@v2
+        with:
+          fail_ci_if_error: true
+          flags: "${{ matrix.python_version }}"
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/pypoetry/artifacts
+            ~/.cache/pypoetry/cache/repositories
+            ~/.cache/pip
+          key: ${{ matrix.python_version }}-pip-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ matrix.python_version }}-pip-
+      - uses: abatilo/actions-poetry@v2.1.4
+      - name: Install dependencies
+        run: |
+          poetry install --no-root --remove-untracked
+      - name: Run black
+        run: |
+          poetry run black aioupbit --check
+      - name: Run mypy
+        run: |
+          poetry run mypy -p aioupbit
