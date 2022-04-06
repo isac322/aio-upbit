@@ -32,7 +32,7 @@ jobs:
       - name: Run test
         run: |
           poetry run pytest --cov aioupbit --cov-config pyproject.toml --cov-report 'xml:coverage.xml' ./tests
-      - uses: codecov/codecov-action@v2
+      - uses: codecov/codecov-action@v3
         with:
           fail_ci_if_error: true
           flags: "${{ matrix.python_version }}"
