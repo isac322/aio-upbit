@@ -39,7 +39,7 @@ PyJWT = "^2.3.0"
 python-rapidjson = "^1.5"
 
 [tool.poetry.dev-dependencies]
-mypy = "^0.942"
+mypy = "^0.950"
 black = "^22.1.0"
 pytest = "^7.0.0"
 pytest-cov = "^3.0.0"
