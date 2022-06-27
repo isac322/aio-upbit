@@ -25,7 +25,7 @@ jobs:
           key: ${{ matrix.python_version }}-pip-${{ hashFiles('pyproject.toml') }}
           restore-keys: |
             ${{ matrix.python_version }}-pip-
-      - uses: abatilo/actions-poetry@v2.1.4
+      - uses: abatilo/actions-poetry@v2.1.5
       - name: Install dependencies
         run: |
           poetry install --no-root --remove-untracked
@@ -53,7 +53,7 @@ jobs:
           key: 3.10-pip-${{ hashFiles('pyproject.toml') }}
           restore-keys: |
             3.10-pip-
-      - uses: abatilo/actions-poetry@v2.1.4
+      - uses: abatilo/actions-poetry@v2.1.5
       - name: Install dependencies
         run: |
           poetry install --no-root --remove-untracked
